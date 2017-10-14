@@ -233,21 +233,21 @@ accuracy_test_rf &lt;- sum(diag(confusion_test_rf))/sum(confusion_test_rf)
 print(confusion_train_rf)</code></pre>
 <pre><code>##      A    B    C    D    E  class.error
 ## A 4463    1    0    0    0 0.0002240143
-## B    8 3028    2    0    0 0.0032916392
-## C    0   10 2727    1    0 0.0040175310
-## D    0    0   11 2561    1 0.0046638166
-## E    0    0    0    6 2880 0.0020790021</code></pre>
+## B    3 3033    2    0    0 0.0016458196
+## C    0   10 2728    0    0 0.0036523009
+## D    0    0   16 2556    1 0.0066070735
+## E    0    0    0    5 2881 0.0017325017</code></pre>
 <pre class="r"><code>print(confusion_test_rf)</code></pre>
 <pre><code>##           Reference
 ## Prediction    A    B    C    D    E
-##          A 1116    0    0    0    0
-##          B    0  759    3    0    0
-##          C    0    0  681    1    0
+##          A 1116    1    0    0    0
+##          B    0  758    6    0    0
+##          C    0    0  678    1    0
 ##          D    0    0    0  642    0
 ##          E    0    0    0    0  721</code></pre>
 <pre class="r"><code>print(data.frame(&quot;train_rf&quot; = accuracy_train_rf, &quot;test_rf&quot; = accuracy_test_rf))</code></pre>
 <pre><code>##    train_rf   test_rf
-## 1 0.9974512 0.9989804</code></pre>
+## 1 0.9975786 0.9979607</code></pre>
 </div>
 <div id="support-vector-machine" class="section level4">
 <h4>3.2.2 Support Vector Machine</h4>
@@ -257,19 +257,19 @@ fit_svm &lt;- svm(classe ~ ., data = trainSet)
 print(table(predict(fit_svm, trainSet[, -54]), trainSet[, 54]))</code></pre>
 <pre><code>##    
 ##        A    B    C    D    E
-##   A 4434  166    5    3    0
-##   B    3 2812   69    1    2
-##   C   26   55 2648  225   36
-##   D    0    1   15 2342   54
-##   E    1    4    1    2 2794</code></pre>
+##   A 4439  171    5    3    0
+##   B    3 2799   72    0    1
+##   C   21   62 2639  223   31
+##   D    0    2   19 2347   54
+##   E    1    4    3    0 2800</code></pre>
 <pre class="r"><code>print(table(predict(fit_svm, testSet[, -54]), testSet[, 54]))</code></pre>
 <pre><code>##    
 ##        A    B    C    D    E
-##   A 1109   43    2    0    0
-##   B    1  691   21    0    0
-##   C    6   23  654   67   13
-##   D    0    1    6  576   20
-##   E    0    1    1    0  688</code></pre>
+##   A 1106   33    2    0    0
+##   B    2  712   29    0    1
+##   C    8   13  647   54    7
+##   D    0    0    5  587   13
+##   E    0    1    1    2  700</code></pre>
 <pre class="r"><code>confusion_train_svm &lt;- table(predict(fit_svm, trainSet[, -54]), trainSet[, 54])
 confusion_test_svm &lt;- table(predict(fit_svm, testSet[, -54]), testSet[, 54])
 accuracy_train_svm &lt;- sum(diag(confusion_train_svm))/sum(confusion_train_svm)
@@ -278,22 +278,22 @@ accuracy_test_svm &lt;- sum(diag(confusion_test_svm))/sum(confusion_test_svm)
 print(confusion_train_svm)</code></pre>
 <pre><code>##    
 ##        A    B    C    D    E
-##   A 4434  166    5    3    0
-##   B    3 2812   69    1    2
-##   C   26   55 2648  225   36
-##   D    0    1   15 2342   54
-##   E    1    4    1    2 2794</code></pre>
+##   A 4439  171    5    3    0
+##   B    3 2799   72    0    1
+##   C   21   62 2639  223   31
+##   D    0    2   19 2347   54
+##   E    1    4    3    0 2800</code></pre>
 <pre class="r"><code>print(confusion_test_svm)</code></pre>
 <pre><code>##    
 ##        A    B    C    D    E
-##   A 1109   43    2    0    0
-##   B    1  691   21    0    0
-##   C    6   23  654   67   13
-##   D    0    1    6  576   20
-##   E    0    1    1    0  688</code></pre>
+##   A 1106   33    2    0    0
+##   B    2  712   29    0    1
+##   C    8   13  647   54    7
+##   D    0    0    5  587   13
+##   E    0    1    1    2  700</code></pre>
 <pre class="r"><code>print(data.frame(&quot;train_svm&quot; = accuracy_train_svm, &quot;test_svm&quot; = accuracy_test_svm))</code></pre>
 <pre><code>##   train_svm  test_svm
-## 1 0.9573858 0.9477441</code></pre>
+## 1 0.9570036 0.9564109</code></pre>
 </div>
 <div id="generalized-boosted-model" class="section level4">
 <h4>3.2.3 Generalized Boosted Model</h4>
@@ -307,19 +307,19 @@ pred_gbm &lt;- predict(fit_gbm, newdata = testSet)
 print(confusionMatrix(predict(fit_gbm, newdata = trainSet), trainSet$classe)$table)</code></pre>
 <pre><code>##           Reference
 ## Prediction    A    B    C    D    E
-##          A 4463   19    0    2    0
-##          B    1 3002   12    5    6
-##          C    0   16 2718   23    5
-##          D    0    1    6 2542   15
-##          E    0    0    2    1 2860</code></pre>
+##          A 4458   11    0    1    0
+##          B    6 3015   17    9    6
+##          C    0   12 2715   19    2
+##          D    0    0    4 2542   16
+##          E    0    0    2    2 2862</code></pre>
 <pre class="r"><code>print(confusionMatrix(pred_gbm, testSet$classe)$table)</code></pre>
 <pre><code>##           Reference
 ## Prediction    A    B    C    D    E
-##          A 1114    7    0    2    0
-##          B    2  741    9    1    3
-##          C    0   11  675   10    2
-##          D    0    0    0  629    5
-##          E    0    0    0    1  711</code></pre>
+##          A 1111    4    0    3    2
+##          B    4  750    4    1    2
+##          C    0    4  673    5    1
+##          D    1    1    5  632   10
+##          E    0    0    2    2  706</code></pre>
 <pre class="r"><code>confusion_train_gbm &lt;- confusionMatrix(predict(fit_gbm), trainSet$classe)$table
 confusion_test_gbm &lt;- confusionMatrix(pred_gbm, testSet$classe)$table
 accuracy_train_gbm &lt;- sum(diag(confusion_train_gbm))/sum(confusion_train_gbm)
@@ -328,22 +328,22 @@ accuracy_test_gbm &lt;- sum(diag(confusion_test_gbm))/sum(confusion_test_gbm)
 print(confusion_train_gbm)</code></pre>
 <pre><code>##           Reference
 ## Prediction    A    B    C    D    E
-##          A 4463   19    0    2    0
-##          B    1 3002   12    5    6
-##          C    0   16 2718   23    5
-##          D    0    1    6 2542   15
-##          E    0    0    2    1 2860</code></pre>
+##          A 4458   11    0    1    0
+##          B    6 3015   17    9    6
+##          C    0   12 2715   19    2
+##          D    0    0    4 2542   16
+##          E    0    0    2    2 2862</code></pre>
 <pre class="r"><code>print(confusion_test_gbm)</code></pre>
 <pre><code>##           Reference
 ## Prediction    A    B    C    D    E
-##          A 1114    7    0    2    0
-##          B    2  741    9    1    3
-##          C    0   11  675   10    2
-##          D    0    0    0  629    5
-##          E    0    0    0    1  711</code></pre>
+##          A 1111    4    0    3    2
+##          B    4  750    4    1    2
+##          C    0    4  673    5    1
+##          D    1    1    5  632   10
+##          E    0    0    2    2  706</code></pre>
 <pre class="r"><code>print(data.frame(&quot;train_gbm&quot; = accuracy_train_gbm, &quot;test_gbm&quot; = accuracy_test_gbm))</code></pre>
 <pre><code>##   train_gbm  test_gbm
-## 1 0.9927384 0.9864899</code></pre>
+## 1 0.9931843 0.9869997</code></pre>
 </div>
 <div id="model-comparison" class="section level4">
 <h4>3.2.4 Model Comparison</h4>
@@ -354,8 +354,8 @@ print(confusion_train_gbm)</code></pre>
 rownames(compare) &lt;- c(&quot;trainSet&quot;, &quot;testSet&quot;)
 print(compare)</code></pre>
 <pre><code>##                 rf       svm       gbm
-## trainSet 0.9974512 0.9573858 0.9927384
-## testSet  0.9989804 0.9477441 0.9864899</code></pre>
+## trainSet 0.9975786 0.9570036 0.9931843
+## testSet  0.9979607 0.9564109 0.9869997</code></pre>
 </div>
 </div>
 </div>
