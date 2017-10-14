@@ -1,0 +1,178 @@
+---
+title: "Course Project"
+author: "Yanan"
+date: "October 14, 2017"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning=FALSE, message=FALSE)
+```
+
+## 1. Project Summary
+This is the final course project of the practical machine learning course on coursera. The goal of this project is to predict the manner in which the test subjects did the exercise, which is the outcome recoded in the `classe` variable in the data set. The activity has 5 manners labeled from `A` through `E`. By using regression analysis, we report a model based on the ranomd foreset algorithm to predict the manners in the test dataset. For more background information, please find visit the link: http://groupware.les.inf.puc-rio.br/har.
+
+## 2.  Exploratory Data Analysis
+### 2.1 Loading R Packages
+First we load the necessary libraries for regression models and plot etc.
+```{r}
+library(knitr)
+library(caret)
+library(randomForest)
+library(e1071)
+library(dplyr)
+library(ggplot2)
+library(ggcorrplot)
+```
+
+### 2.2 Data Loading
+First we check if the required datasets exist. If not, we download them from the website and then read them with `read.csv` command.
+```{r}
+trainFile <- "pml-training.csv"
+testFile <- "pml-testing.csv"
+if (!file.exists(trainFile)){
+        trainURL <- "https://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv"
+        download.file(trainURL, destfile = trainFile)
+}
+if (!file.exists(testFile)){
+        testURL  <- "https://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv"
+        download.file(trainURL, destfile = testFile)
+}
+train <- read.csv(trainFile)
+test <- read.csv(testFile)
+```
+
+### 2.3 Data Clening
+We first do some quick look at the data set. There appears to be 160 variables and a huge amount of records. Thus we need to do some cleaning before we jump into the regression part.
+```{r}
+dim(train)
+```
+
+First step is to roughly look at the data and to remove the ID variables which don't contribute to statistics. These are the first two columns, i.e. ID and username. 
+```{r}
+head(train[, 1:8], 5)
+train <-  train[, -c(1, 2)]
+test <-  test[, -c(1, 2)]
+```
+
+Then we remove remove time dependent variables which are not related to the goal of this project.
+```{r}
+time_index <- grep("time", names(train))
+train <- train[, -time_index]
+test <- test[, -time_index]
+```
+
+Finally, we remove most NA variables and variables with nearly zero variance. Because they affect little to regression analysis.
+```{r}
+NA_index <- sapply(train, function(x) {mean(!is.na(x))}) > 0.95
+train <- train[, NA_index == TRUE]
+test <- test[, NA_index == TRUE]
+
+NZV <- nearZeroVar(train)
+train <- train[, -NZV]
+test <- test[, -NZV]
+```
+
+### 2.4 Correlation Plot
+We plot here a correlation map, which gives us some intuition if the remaining variables are correlated. if there exists highly correlated variables, we need to consider to do principal component analysis, but fortunately this is not the case with this dataset. Now we have a more or less clean data for regression analysis.
+```{r}
+corr <- round(cor(train[,-54]), 1)
+g <- ggcorrplot(corr, hc.order = TRUE,
+           type = "lower", tl.cex = 7, tl.srt = 70,
+           title="Correlogram of Activity")
+g
+```
+
+## 3. Regression Analysis
+### 3.1 Data Partition
+We split the train data again into train and test sets, with 80% in the training set.
+```{r}
+inTrain <- createDataPartition(y = train$classe, p = 0.8, list = FALSE)
+trainSet <- train[inTrain, ]
+testSet <- train[-inTrain, ]
+print(data.frame("trainDim" = dim(trainSet), "testDim" = dim(testSet)))
+```
+
+
+### 3.2 Model Training
+Now we choose three models for this dataset and compare which one works the best.
+#### 3.2.1 Random Forest
+We use the training function from the `randomForest` package. We print out the confusion matrix for both the training and the testing sets, as well as their acurracy of the prediction.
+```{r}
+set.seed(1111)
+fit_rf <- randomForest(classe ~ ., data = trainSet)
+pred_rf <- predict(fit_rf, newdata = testSet)
+
+confusion_train_rf <- fit_rf$confusion
+confusion_test_rf <- confusionMatrix(pred_rf, testSet$classe)$table
+accuracy_train_rf <- sum(diag(confusion_train_rf))/sum(confusion_train_rf)
+accuracy_test_rf <- sum(diag(confusion_test_rf))/sum(confusion_test_rf)
+
+print(confusion_train_rf)
+print(confusion_test_rf)
+print(data.frame("train_rf" = accuracy_train_rf, "test_rf" = accuracy_test_rf))
+```
+
+#### 3.2.2 Support Vector Machine
+We use the training function from the `e1071` package. Again We print out the confusion matrix for both the training and the testing sets, as well as their acurracy of the prediction.
+```{r}
+set.seed(1111)
+fit_svm <- svm(classe ~ ., data = trainSet)
+print(table(predict(fit_svm, trainSet[, -54]), trainSet[, 54]))
+print(table(predict(fit_svm, testSet[, -54]), testSet[, 54]))
+
+confusion_train_svm <- table(predict(fit_svm, trainSet[, -54]), trainSet[, 54])
+confusion_test_svm <- table(predict(fit_svm, testSet[, -54]), testSet[, 54])
+accuracy_train_svm <- sum(diag(confusion_train_svm))/sum(confusion_train_svm)
+accuracy_test_svm <- sum(diag(confusion_test_svm))/sum(confusion_test_svm)
+
+print(confusion_train_svm)
+print(confusion_test_svm)
+print(data.frame("train_svm" = accuracy_train_svm, "test_svm" = accuracy_test_svm))
+```
+
+
+#### 3.2.3 Generalized Boosted Model
+Finally, we use the training function from the `caret` package. The gbm method in caret package is really slow.
+```{r}
+set.seed(1111)
+control_gbm <- trainControl(method = "repeatedcv", number = 5, repeats = 1)
+fit_gbm  <- train(classe ~ ., data=trainSet, method = "gbm",
+                  trControl = control_gbm, verbose = FALSE)
+pred_gbm <- predict(fit_gbm, newdata = testSet)
+
+print(confusionMatrix(predict(fit_gbm, newdata = trainSet), trainSet$classe)$table)
+print(confusionMatrix(pred_gbm, testSet$classe)$table)
+
+confusion_train_gbm <- confusionMatrix(predict(fit_gbm), trainSet$classe)$table
+confusion_test_gbm <- confusionMatrix(pred_gbm, testSet$classe)$table
+accuracy_train_gbm <- sum(diag(confusion_train_gbm))/sum(confusion_train_gbm)
+accuracy_test_gbm <- sum(diag(confusion_test_gbm))/sum(confusion_test_gbm)
+
+print(confusion_train_gbm)
+print(confusion_test_gbm)
+print(data.frame("train_gbm" = accuracy_train_gbm, "test_gbm" = accuracy_test_gbm))
+```
+
+#### 3.2.4 Model Comparison
+Finally, we compare the accuracy of the proposed models. The random forest method performed the best fitting, followed by generalized boosted model and support vector machine. Thus we will use random forest model to predict the test set in the next section. 
+```{r}
+compare <- data.frame("rf" = c(accuracy_train_rf, accuracy_test_rf),
+                      "svm" = c(accuracy_train_svm, accuracy_test_svm),
+                      "gbm" = c(accuracy_train_gbm, accuracy_test_gbm))
+rownames(compare) <- c("trainSet", "testSet")
+print(compare)
+```
+
+## Prediction
+Finally we do prediction using the random forest model on the test data and use the output to fill in the quiz.
+```{r}
+pred_test = predict(fit_rf, newdata = test)
+print(pred_test)
+```
+
+
+
+
+
+
