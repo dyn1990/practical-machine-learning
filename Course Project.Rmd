@@ -96,6 +96,7 @@ print(data.frame("trainDim" = dim(trainSet), "testDim" = dim(testSet)))
 
 ### 3.2 Model Training
 Now we choose three models for this dataset and compare which one works the best.
+
 #### 3.2.1 Random Forest
 We use the training function from the `randomForest` package. We print out the confusion matrix for both the training and the testing sets, as well as their acurracy of the prediction.
 ```{r}
@@ -164,7 +165,7 @@ rownames(compare) <- c("trainSet", "testSet")
 print(compare)
 ```
 
-## Prediction
+## 4. Prediction
 Finally we do prediction using the random forest model on the test data and use the output to fill in the quiz.
 ```{r}
 pred_test = predict(fit_rf, newdata = test)
